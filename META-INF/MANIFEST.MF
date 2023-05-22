@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Liberty-devex
+Bundle-SymbolicName: liberty-devex;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Import-Package: org.eclipse.jface.action,
+ org.eclipse.jface.dialogs,
+ org.eclipse.jface.images,
+ org.eclipse.jface.viewers,
+ org.eclipse.swt.widgets,
+ org.eclipse.ui
+Automatic-Module-Name: liberty.devex
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

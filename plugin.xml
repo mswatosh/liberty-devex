@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<plugin
+	name="Liberty Devex"
+	id="io.openliberty.devex"
+	version="0.0.0"
+	provider-name="OTI">
+	
+    <requires>
+	<import plugin="org.eclipse.core.resources"/>
+        <import plugin="org.eclipse.ui"/>
+    </requires>
+
+    <runtime>
+	<library name="liberty-devex.jar"/>
+    </runtime>
+	
+    <extension point = "org.eclipse.ui.actionSets">
+        <actionSet
+            id="io.openliberty.devex.HelloWorldActionSet"
+            label="Hello World"
+	    visible="true"
+	    description="The action set for the Hello Liberty example">
+	    <menu
+		id="io.openliberty.devex.HelloLibertyMenu"
+		label="Samples">
+		<separator name="samples"/>
+	    </menu>
+	    <action id="io.openliberty.devex.HelloWorldAction"
+		menubarPath="io.openliberty.devex.HelloWorldMenu/samples"
+		toolbarPath="Normal"			
+		label="Hello World"
+		tooltip="Press to see a message"
+		icon="icons/helloworld.gif"
+		class="io.openliberty.devex.HelloWorldAction"/>
+        </actionSet>
+    </extension>
+</plugin>
