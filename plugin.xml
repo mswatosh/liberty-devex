@@ -13,25 +13,26 @@
     <runtime>
 	<library name="liberty-devex.jar"/>
     </runtime>
-	
-    <extension point = "org.eclipse.ui.actionSets">
-        <actionSet
-            id="io.openliberty.devex.HelloWorldActionSet"
-            label="Hello World"
-	    visible="true"
-	    description="The action set for the Hello Liberty example">
-	    <menu
-		id="io.openliberty.devex.HelloLibertyMenu"
-		label="Samples">
-		<separator name="samples"/>
-	    </menu>
-	    <action id="io.openliberty.devex.HelloWorldAction"
-		menubarPath="io.openliberty.devex.HelloWorldMenu/samples"
-		toolbarPath="Normal"			
-		label="Hello World"
-		tooltip="Press to see a message"
-		icon="icons/helloworld.gif"
-		class="io.openliberty.devex.HelloWorldAction"/>
-        </actionSet>
+    
+    <extension point = "org.eclipse.ui.menus">
+        <menuContribution
+        	allPopups="false"
+    		locationURI="popup:org.eclipse.ui.popup.any">
+        	<!-- "popup:edit/copy?after=org.eclipse.jdt.ui.actions.CopyQualifiedName" -->
+			<command 
+				commandId="io.openliberty.devex.CopyForTest"
+				label="Copy For Test"
+				tooltip="Copy the gradle command to run this as an OpenLiberty test">
+			 </command>
+    	</menuContribution>
+
+    </extension>
+    
+    <extension point = "org.eclipse.ui.handlers">
+       <handler
+             class="io.openliberty.devex.CopyForTestAction"
+             commandId="io.openliberty.devex.CopyForTest">
+       </handler>
+    
     </extension>
 </plugin>
