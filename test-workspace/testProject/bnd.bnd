@@ -1,0 +1,4 @@
+# This is a FAT test project
+fat.project: true
+
+# Other bnd properties can go here

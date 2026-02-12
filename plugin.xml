@@ -14,17 +14,41 @@
 	<library name="liberty-devex.jar"/>
     </runtime>
     
+    <extension point="org.eclipse.core.expressions.propertyTesters">
+        <propertyTester
+            id="io.openliberty.devex.fatProjectTester"
+            type="org.eclipse.jdt.core.IJavaProject"
+            namespace="io.openliberty.devex"
+            properties="isFatProject"
+            class="io.openliberty.devex.FatProjectPropertyTester">
+        </propertyTester>
+    </extension>
+    
+    <extension point="org.eclipse.ui.commands">
+        <command
+            id="io.openliberty.devex.CopyForTest"
+            name="Copy For Test"
+            description="Copy the gradle command to run this as an OpenLiberty test">
+        </command>
+    </extension>
+    
     <extension point = "org.eclipse.ui.menus">
         <menuContribution
         	allPopups="false"
-    		locationURI="popup:org.eclipse.ui.popup.any">
-        	<!-- "popup:edit/copy?after=org.eclipse.jdt.ui.actions.CopyQualifiedName" -->
-			<command 
-				commandId="io.openliberty.devex.CopyForTest"
-				label="Copy For Test"
-				tooltip="Copy the gradle command to run this as an OpenLiberty test">
-			 </command>
-    	</menuContribution>
+    		locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+   <command
+    commandId="io.openliberty.devex.CopyForTest"
+    label="Copy For Test"
+    tooltip="Copy the gradle command to run this as an OpenLiberty test">
+    <visibleWhen checkEnabled="false">
+     <iterate>
+      <adapt type="org.eclipse.jdt.core.IJavaProject">
+       <test property="io.openliberty.devex.isFatProject" value="true" forcePluginActivation="true"/>
+      </adapt>
+     </iterate>
+    </visibleWhen>
+    </command>
+     	</menuContribution>
 
     </extension>
     
@@ -32,6 +56,16 @@
        <handler
              class="io.openliberty.devex.CopyForTestAction"
              commandId="io.openliberty.devex.CopyForTest">
+             
+   <activeWhen>
+   <with variable="selection">
+      <iterate ifEmpty="false" operator="or">
+     	<adapt type="org.eclipse.jdt.core.IJavaProject">
+     		<test property="io.openliberty.devex.isFatProject" value="true"/>
+     	</adapt>
+      </iterate>
+   </with>
+   </activeWhen>
        </handler>
     
     </extension>

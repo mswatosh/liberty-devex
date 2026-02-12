@@ -1,18 +1,21 @@
 package io.openliberty.devex;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.handlers.HandlerUtil;
-import org.eclipse.jface.text.BlockTextSelection;
-import org.eclipse.jface.text.IMarkSelection;
-import org.eclipse.jface.text.IMultiTextSelection;
-import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.widgets.Display;
 
 
 /**
@@ -21,38 +24,77 @@ import org.eclipse.jdt.core.JavaModelException;
  *
  */
 public class CopyForTestAction extends AbstractHandler {
-
+	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-        ISelection selection = HandlerUtil.getActiveWorkbenchWindow(event).getSelectionService().getSelection();
-        if (selection instanceof ITextSelection)
-        	System.out.println("ITextSelection: " + ((ITextSelection) selection).getText());
-        //if (selection instanceof ITreeSelection)
-        //	System.out.println("ITreeSelection: " + ((ITreeSelection) selection).getPaths().toString());
-        if (selection instanceof IStructuredSelection) {
-        	IStructuredSelection ss = (IStructuredSelection) selection;
-        	System.out.println("IStructuredSelection: " + ss.getFirstElement().getClass().toString());
-        	if (ss.getFirstElement() instanceof IJavaProject) {
-        		IJavaProject jp = (IJavaProject) ss.getFirstElement();
-        		System.out.println("IJavaProject: " +jp.getElementName());
-        		try {
-					System.out.println("IJavaProject: " + jp.getRequiredProjectNames()[0]);
-				} catch (JavaModelException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+	       ISelection selection = HandlerUtil.getActiveWorkbenchWindow(event).getSelectionService().getSelection();
+	       
+	       if (selection instanceof IStructuredSelection) {
+	       	IStructuredSelection ss = (IStructuredSelection) selection;
+	       	if (ss.getFirstElement() instanceof IJavaProject) {
+	       		IJavaProject jp = (IJavaProject) ss.getFirstElement();
+	       		String projectName = jp.getElementName();
+	       		
+	       		// Check if this is a FAT test project by checking for bnd.bnd with fat.project: true
+	       		if (isFatProject(jp)) {
+	       			// Build the gradle command
+	       			String gradleCommand = "./gradlew " + projectName + ":buildandrun";
+	       			
+	       			// Copy to clipboard
+	       			copyToClipboard(gradleCommand);
+	       		}
+	       	}
+	       }
+	       
+	       return null;
+	}
+	
+	/**
+	 * Check if the project is a FAT project by reading bnd.bnd file.
+	 * @param project The Java project to check
+	 * @return true if bnd.bnd exists and contains "fat.project: true"
+	 */
+	private boolean isFatProject(IJavaProject project) {
+		try {
+			IFile bndFile = project.getProject().getFile("bnd.bnd");
+			if (!bndFile.exists()) {
+				return false;
+			}
+			
+			try (InputStream is = bndFile.getContents();
+			     BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					line = line.trim();
+					if (line.startsWith("fat.project:")) {
+						String value = line.substring("fat.project:".length()).trim();
+						return "true".equalsIgnoreCase(value);
+					}
 				}
-        	}
-        	System.out.println("IStructuredSelection: " + ((IStructuredSelection) selection).getFirstElement().toString());
-        	//System.out.println("IStructuredSelection: " + ((IStructuredSelection) selection).getFirstElement().getClass().toString());
-        	
-        }
-        if (selection instanceof IMarkSelection)
-        	System.out.println("IMarkSelection: " + ((IMarkSelection) selection).getDocument().get());
-        //if (selection instanceof IMultiTextSelection)
-        //	System.out.println("IMultiTextSelection: " + ((IMultiTextSelection) selection).getText());
-        //if (selection instanceof BlockTextSelection)
-        //	System.out.println("BlockTextSelection: " + ((BlockTextSelection) selection).getText());
-        return null;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/**
+	 * Copy the given text to the system clipboard.
+	 * @param text The text to copy
+	 */
+	private void copyToClipboard(String text) {
+		Display display = Display.getCurrent();
+		if (display == null) {
+			display = Display.getDefault();
+		}
+		
+		Clipboard clipboard = new Clipboard(display);
+		try {
+			TextTransfer textTransfer = TextTransfer.getInstance();
+			clipboard.setContents(new Object[] { text }, new Transfer[] { textTransfer });
+		} finally {
+			clipboard.dispose();
+		}
 	}
 
 }

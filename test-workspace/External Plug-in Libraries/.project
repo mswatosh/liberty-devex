@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>testProject</name>
+	<name>External Plug-in Libraries</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -16,7 +16,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1770823147414</id>
+			<id>1770823147405</id>
 			<name></name>
 			<type>30</type>
 			<matcher>
