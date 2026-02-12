@@ -22,6 +22,13 @@
             properties="isFatProject"
             class="io.openliberty.devex.FatProjectPropertyTester">
         </propertyTester>
+        <propertyTester
+            id="io.openliberty.devex.testMethodTester"
+            type="org.eclipse.jdt.core.IMethod"
+            namespace="io.openliberty.devex"
+            properties="hasTestAnnotation"
+            class="io.openliberty.devex.TestMethodPropertyTester">
+        </propertyTester>
     </extension>
     
     <extension point="org.eclipse.ui.commands">
@@ -29,6 +36,11 @@
             id="io.openliberty.devex.CopyForTest"
             name="Copy For Test"
             description="Copy the gradle command to run this as an OpenLiberty test">
+        </command>
+        <command
+            id="io.openliberty.devex.CopyForTestMethod"
+            name="Copy For Test Method"
+            description="Copy the gradle command to run this specific test method in OpenLiberty">
         </command>
     </extension>
     
@@ -49,6 +61,23 @@
     </visibleWhen>
     </command>
      	</menuContribution>
+     	
+     	<menuContribution
+        	allPopups="false"
+    		locationURI="popup:org.eclipse.jdt.ui.outline?after=additions">
+   <command
+    commandId="io.openliberty.devex.CopyForTestMethod"
+    label="Copy For Test Method"
+    tooltip="Copy the gradle command to run this specific test method in OpenLiberty">
+    <visibleWhen checkEnabled="false">
+     <iterate>
+      <adapt type="org.eclipse.jdt.core.IMethod">
+       <test property="io.openliberty.devex.hasTestAnnotation" value="true" forcePluginActivation="true"/>
+      </adapt>
+     </iterate>
+    </visibleWhen>
+    </command>
+     	</menuContribution>
 
     </extension>
     
@@ -62,6 +91,21 @@
       <iterate ifEmpty="false" operator="or">
      	<adapt type="org.eclipse.jdt.core.IJavaProject">
      		<test property="io.openliberty.devex.isFatProject" value="true"/>
+     	</adapt>
+      </iterate>
+   </with>
+   </activeWhen>
+       </handler>
+       
+       <handler
+             class="io.openliberty.devex.CopyForTestMethodAction"
+             commandId="io.openliberty.devex.CopyForTestMethod">
+             
+   <activeWhen>
+   <with variable="selection">
+      <iterate ifEmpty="false" operator="or">
+     	<adapt type="org.eclipse.jdt.core.IMethod">
+     		<test property="io.openliberty.devex.hasTestAnnotation" value="true"/>
      	</adapt>
       </iterate>
    </with>
