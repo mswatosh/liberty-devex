@@ -2,7 +2,7 @@
 <plugin
 	name="Liberty Devex"
 	id="io.openliberty.devex"
-	version="0.0.0"
+	version="1.0.0"
 	provider-name="OTI">
 	
     <requires>
@@ -23,24 +23,43 @@
             class="io.openliberty.devex.FatProjectPropertyTester">
         </propertyTester>
         <propertyTester
+            id="io.openliberty.devex.sourceProjectTester"
+            type="org.eclipse.jdt.core.IJavaProject"
+            namespace="io.openliberty.devex"
+            properties="isSourceProject"
+            class="io.openliberty.devex.SourceProjectPropertyTester">
+        </propertyTester>
+        <propertyTester
             id="io.openliberty.devex.testMethodTester"
             type="org.eclipse.jdt.core.IMethod"
             namespace="io.openliberty.devex"
             properties="hasTestAnnotation"
             class="io.openliberty.devex.TestMethodPropertyTester">
         </propertyTester>
+        <propertyTester
+            id="io.openliberty.devex.activeEditorMethodTester"
+            type="org.eclipse.jface.text.ITextSelection"
+            namespace="io.openliberty.devex"
+            properties="hasTestAnnotationAtCursor"
+            class="io.openliberty.devex.ActiveEditorMethodPropertyTester">
+        </propertyTester>
     </extension>
     
     <extension point="org.eclipse.ui.commands">
         <command
             id="io.openliberty.devex.CopyForTest"
-            name="Copy For Test"
+            name="Copy BuildAndRun"
             description="Copy the gradle command to run this as an OpenLiberty test">
         </command>
         <command
             id="io.openliberty.devex.CopyForTestMethod"
-            name="Copy For Test Method"
+            name="Copy BuildAndRun"
             description="Copy the gradle command to run this specific test method in OpenLiberty">
+        </command>
+        <command
+            id="io.openliberty.devex.CopyAssemble"
+            name="Copy Assemble"
+            description="Copy the gradle command to assemble this project">
         </command>
     </extension>
     
@@ -50,7 +69,7 @@
     		locationURI="popup:org.eclipse.ui.popup.any?after=additions">
    <command
     commandId="io.openliberty.devex.CopyForTest"
-    label="Copy For Test"
+    label="Copy BuildAndRun"
     tooltip="Copy the gradle command to run this as an OpenLiberty test">
     <visibleWhen checkEnabled="false">
      <iterate>
@@ -63,23 +82,55 @@
      	</menuContribution>
      	
      	<menuContribution
-        	allPopups="false"
-    		locationURI="popup:org.eclipse.jdt.ui.outline?after=additions">
+     		allPopups="false"
+     		locationURI="popup:org.eclipse.ui.popup.any?after=additions">
    <command
-    commandId="io.openliberty.devex.CopyForTestMethod"
-    label="Copy For Test Method"
-    tooltip="Copy the gradle command to run this specific test method in OpenLiberty">
+    commandId="io.openliberty.devex.CopyAssemble"
+    label="Copy Assemble"
+    tooltip="Copy the gradle command to assemble this project">
     <visibleWhen checkEnabled="false">
      <iterate>
-      <adapt type="org.eclipse.jdt.core.IMethod">
-       <test property="io.openliberty.devex.hasTestAnnotation" value="true" forcePluginActivation="true"/>
-      </adapt>
+     	<adapt type="org.eclipse.jdt.core.IJavaProject">
+     	 <test property="io.openliberty.devex.isSourceProject" value="true" forcePluginActivation="true"/>
+     	</adapt>
      </iterate>
     </visibleWhen>
     </command>
      	</menuContribution>
+     	
+     	<menuContribution
+     	  	allPopups="false"
+     	locationURI="popup:org.eclipse.jdt.ui.outline?after=additions">
+   <command
+    commandId="io.openliberty.devex.CopyForTestMethod"
+    label="Copy BuildAndRun"
+    tooltip="Copy the gradle command to run this specific test method in OpenLiberty">
+    <visibleWhen checkEnabled="true">
+     <iterate>
+     	<adapt type="org.eclipse.jdt.core.IMethod">
+     	 <test property="io.openliberty.devex.hasTestAnnotation" value="true" forcePluginActivation="true"/>
+     	</adapt>
+     </iterate>
+    </visibleWhen>
+    </command>
+     </menuContribution>
+     
+     <menuContribution
+    	  	allPopups="false"
+    	locationURI="popup:#CompilationUnitEditorContext?after=additions">
+   <command
+    commandId="io.openliberty.devex.CopyForTestMethod"
+    label="Copy BuildAndRun"
+    tooltip="Copy the gradle command to run this specific test method in OpenLiberty">
+    <visibleWhen checkEnabled="false">
+    	<with variable="selection">
+    	 <test property="io.openliberty.devex.hasTestAnnotationAtCursor" value="true" forcePluginActivation="true"/>
+    	</with>
+    </visibleWhen>
+    </command>
+    	</menuContribution>
 
-    </extension>
+   </extension>
     
     <extension point = "org.eclipse.ui.handlers">
        <handler
@@ -100,13 +151,18 @@
        <handler
              class="io.openliberty.devex.CopyForTestMethodAction"
              commandId="io.openliberty.devex.CopyForTestMethod">
+       </handler>
+       
+       <handler
+             class="io.openliberty.devex.CopyAssembleAction"
+             commandId="io.openliberty.devex.CopyAssemble">
              
    <activeWhen>
    <with variable="selection">
       <iterate ifEmpty="false" operator="or">
-     	<adapt type="org.eclipse.jdt.core.IMethod">
-     		<test property="io.openliberty.devex.hasTestAnnotation" value="true"/>
-     	</adapt>
+      <adapt type="org.eclipse.jdt.core.IJavaProject">
+       <test property="io.openliberty.devex.isSourceProject" value="true"/>
+      </adapt>
       </iterate>
    </with>
    </activeWhen>

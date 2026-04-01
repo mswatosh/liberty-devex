@@ -7,7 +7,7 @@ Predominantly vibe-coded with IBM Bob
 ## Features
 
 - Right-click on a FAT test project in the Package Explorer
-- Select "Copy For Test" from the context menu
+- Select "Copy BuildAndRun" from the context menu
 - The Gradle command (e.g., `./gradlew com.ibm.ws.concurrent_fat_jakarta_11:buildandrun`) is copied to your clipboard
 - Menu item only appears for FAT test projects (projects that have a `bnd.bnd` file in the root with the line `fat.project: true`)
 
@@ -38,7 +38,7 @@ Predominantly vibe-coded with IBM Bob
 
 4. **Test the Plugin**
    - In the Package Explorer, right-click on `testProject`
-   - You should see "Copy For Test" in the context menu
+   - You should see "Copy BuildAndRun" in the context menu
    - Click it to copy the Gradle command to clipboard
    - Paste in a text editor to verify: `./gradlew testProject:buildandrun`
    - Check the Eclipse Console for debug output

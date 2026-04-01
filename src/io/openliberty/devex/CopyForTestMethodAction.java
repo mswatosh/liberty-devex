@@ -8,14 +8,19 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 /**
@@ -26,24 +31,59 @@ public class CopyForTestMethodAction extends AbstractHandler {
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		ISelection selection = HandlerUtil.getActiveWorkbenchWindow(event).getSelectionService().getSelection();
+		IMethod method = null;
 		
+		// Try to get method from structured selection (e.g., Outline view)
+		ISelection selection = HandlerUtil.getActiveWorkbenchWindow(event).getSelectionService().getSelection();
 		if (selection instanceof IStructuredSelection) {
 			IStructuredSelection ss = (IStructuredSelection) selection;
 			if (ss.getFirstElement() instanceof IMethod) {
-				IMethod method = (IMethod) ss.getFirstElement();
-				IJavaProject javaProject = method.getJavaProject();
-				String projectName = javaProject.getElementName();
-				String methodName = method.getElementName();
-				
-				// Check if this is a FAT test project
-				if (isFatProject(javaProject)) {
-					// Build the gradle command with the test method parameter
-					String gradleCommand = "./gradlew " + projectName + ":buildandrun -Dfat.test.method.name=" + methodName;
-					
-					// Copy to clipboard
-					copyToClipboard(gradleCommand);
+				method = (IMethod) ss.getFirstElement();
+			}
+		}
+		
+		// Try to get method from active editor if not found in selection
+		if (method == null) {
+			try {
+				IEditorPart editor = HandlerUtil.getActiveEditor(event);
+				if (editor != null) {
+					IJavaElement element = JavaUI.getEditorInputJavaElement(editor.getEditorInput());
+					if (selection instanceof ITextSelection && element != null) {
+						ITextSelection textSelection = (ITextSelection) selection;
+						// element should be an ICompilationUnit, which has getElementAt()
+						if (element instanceof ICompilationUnit) {
+							ICompilationUnit cu = (ICompilationUnit) element;
+							IJavaElement selectedElement = cu.getElementAt(textSelection.getOffset());
+							if (selectedElement instanceof IMethod) {
+								method = (IMethod) selectedElement;
+							} else if (selectedElement != null) {
+								// If we're inside a method but not directly on it, try to find the enclosing method
+								IJavaElement parent = selectedElement.getAncestor(IJavaElement.METHOD);
+								if (parent instanceof IMethod) {
+									method = (IMethod) parent;
+								}
+							}
+						}
+					}
 				}
+			} catch (Exception e) {
+				// Silently fail - we'll just not execute if we can't find the method
+			}
+		}
+		
+		// Execute the action if we found a method
+		if (method != null) {
+			IJavaProject javaProject = method.getJavaProject();
+			String projectName = javaProject.getElementName();
+			String methodName = method.getElementName();
+			
+			// Check if this is a FAT test project
+			if (isFatProject(javaProject)) {
+				// Build the gradle command with the test method parameter
+				String gradleCommand = "./gradlew " + projectName + ":buildandrun -Dfat.test.method.name=" + methodName;
+				
+				// Copy to clipboard
+				copyToClipboard(gradleCommand);
 			}
 		}
 		
